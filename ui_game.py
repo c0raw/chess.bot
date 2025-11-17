@@ -57,6 +57,7 @@ class ChessGUI:
         self.history = Pile_LIFO()
         self.positions = Liste_chaine()
         # ----------------------------
+        self.ai_locked = False
 
     def draw_board(self):
         self.canvas.delete("all")
@@ -88,8 +89,12 @@ class ChessGUI:
 
     def _tick(self):
         self.update_ui()
-        if self.state.vs_ai and not self.state.white_to_move:
+
+        if (self.state.vs_ai 
+            and not self.state.white_to_move 
+            and not self.ai_locked):
             self.root.after(50, self._ai_move)
+
         self.root.after(200, self._tick)
 
     def update_ui(self):
@@ -155,6 +160,7 @@ class ChessGUI:
             self.move_log.insert(tk.END, f"{i}. {move.get('algebraic','')}  {move.get('time',0.0):.2f}s\n")
 
     def on_click(self, event):
+        self.ai_locked = False
         c = event.x // SQUARE; r = event.y // SQUARE
         if not (0 <= r < 8 and 0 <= c < 8):
             return
@@ -280,22 +286,34 @@ class ChessGUI:
 
     def undo_last(self):
         # ----- AJOUTS IMPORTANTS-----
-        if self.history.is_empty() or len(self.positions) <= 1:
-            messagebox.showinfo("Annuler", "Aucun coup à annuler.")
-            return
+        # On bloque l’IA tant qu’on annule
+        self.ai_locked = True
 
-        last_move = self.history.pop()
-        self.positions.pop()
-        prev_node = self.positions.tail
-        if not prev_node:
-            initial = GameState(vs_ai=self.state.vs_ai, ai_level=self.state.ai_level)
-            self.state.board = [row[:] for row in initial.board]
+        if self.vs_ai:
+            undo_count = 2
         else:
-            self.state.board = [row[:] for row in prev_node.data]
-        if self.state.move_history:
-            self.state.move_history.pop()
+            undo_count = 1
 
-        self.state.white_to_move = not self.state.white_to_move
+        for _ in range(undo_count):
+            if self.history.is_empty() or len(self.positions) <= 1:
+                break
+
+            self.history.pop()
+            self.positions.pop()
+
+            prev = self.positions.tail
+
+            if not prev:
+                initial = GameState(vs_ai=self.state.vs_ai, ai_level=self.state.ai_level)
+                self.state.board = [r[:] for r in initial.board]
+            else:
+                self.state.board = [r[:] for r in prev.data]
+
+            if self.state.move_history:
+                self.state.move_history.pop()
+
+            self.state.white_to_move = not self.state.white_to_move
+
         self.selected = None
         self.legal_targets = []
         self.draw_board()
@@ -303,6 +321,12 @@ class ChessGUI:
         # ----------------------------
 
     def _ai_move(self):
+        if self.ai_locked:
+            return
+
+        if getattr(self, "ai_locked", False):
+            return
+        
         if getattr(self, "game_over", False):
             self.ai_pending = False
             return
