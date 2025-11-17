@@ -23,22 +23,19 @@ class MainMenu:
         ChessGUI(self.root, vs_ai=False, total_time=total_time)
 
     def start_pvai(self):
-        # Création d'une petite fenêtre de sélection
         win = tk.Toplevel(self.root)
         win.title("Choix de la difficulté IA")
-        win.grab_set()  # Rend la fenêtre modale
+        win.grab_set()
 
         tk.Label(win, text="Sélectionne la difficulté de l'IA :", 
                 font=("Helvetica", 12)).pack(pady=10)
 
-        # Menu déroulant
         levels = list(AI_BY_NAME.keys())
         difficulty_var = tk.StringVar(value=levels[0])
 
         combo = ttk.Combobox(win, values=levels, textvariable=difficulty_var, state="readonly")
         combo.pack(pady=5)
 
-        # Temps par joueur
         tk.Label(win, text="Minutes par joueur (0 = illimité) :", font=("Helvetica", 11)).pack(pady=10)
         time_var = tk.IntVar(value=10)
         tk.Entry(win, textvariable=time_var).pack(pady=5)
