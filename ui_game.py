@@ -53,10 +53,6 @@ class ChessGUI:
         self.draw_board()
         self.update_ui()
         self.root.after(200, self._tick)
-        # ----- AJOUTS IMPORTANTS-----
-        self.history = Pile_LIFO()
-        self.positions = Liste_chaine()
-        # ----------------------------
         self.ai_locked = False
 
     def draw_board(self):

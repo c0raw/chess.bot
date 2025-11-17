@@ -1,4 +1,5 @@
 import tkinter as tk
+from tkinter import ttk
 from tkinter import simpledialog, messagebox
 from ui_game import ChessGUI
 from engine.ai import AI_BY_NAME
@@ -22,14 +23,46 @@ class MainMenu:
         ChessGUI(self.root, vs_ai=False, total_time=total_time)
 
     def start_pvai(self):
-        level = simpledialog.askstring("Difficulté IA", "Choisis la difficulté : Facile, Naïve, Normal, Complexe, Impossible", initialvalue="Facile")
-        if not level:
-            return
-        if level not in AI_BY_NAME:
-            messagebox.showerror("Erreur", "Difficulté inconnue.")
-            return
-        self.frame.destroy()
-        ChessGUI(self.root, vs_ai=True, ai_level=level)
+        # Création d'une petite fenêtre de sélection
+        win = tk.Toplevel(self.root)
+        win.title("Choix de la difficulté IA")
+        win.grab_set()  # Rend la fenêtre modale
+
+        tk.Label(win, text="Sélectionne la difficulté de l'IA :", 
+                font=("Helvetica", 12)).pack(pady=10)
+
+        # Menu déroulant
+        levels = list(AI_BY_NAME.keys())
+        difficulty_var = tk.StringVar(value=levels[0])
+
+        combo = ttk.Combobox(win, values=levels, textvariable=difficulty_var, state="readonly")
+        combo.pack(pady=5)
+
+        # Temps par joueur
+        tk.Label(win, text="Minutes par joueur (0 = illimité) :", font=("Helvetica", 11)).pack(pady=10)
+        time_var = tk.IntVar(value=10)
+        tk.Entry(win, textvariable=time_var).pack(pady=5)
+
+        def validate():
+            level = difficulty_var.get()
+            minutes = time_var.get()
+
+            total_time = minutes * 60 if minutes > 0 else None
+
+            win.destroy()
+            self.frame.destroy()
+
+            ChessGUI(self.root, vs_ai=True, ai_level=level, total_time=total_time)
+
+        def cancel():
+            win.destroy()
+
+        btn_frame = tk.Frame(win)
+        btn_frame.pack(pady=15)
+
+        tk.Button(btn_frame, text="Annuler", width=12, command=cancel).grid(row=0, column=0, padx=6)
+        tk.Button(btn_frame, text="Valider", width=12, command=validate).grid(row=0, column=1, padx=6)
+
 
 if __name__ == "__main__":
     root = tk.Tk()
