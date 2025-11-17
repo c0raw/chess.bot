@@ -47,6 +47,7 @@ class ChessGUI:
         self.move_log.pack(pady=8)
         self.canvas.bind("<Button-1>", self.on_click)
         self.selected = None
+        self.last_move_squares = None
         self.legal_targets = []
         self.state.start_time = time.time()
         self.state.move_start_time = time.time()
@@ -82,6 +83,17 @@ class ChessGUI:
             self.canvas.create_text(c*SQUARE+10, BOARD_SIZE*SQUARE-8, text=FILES[c], anchor='w', font=("Helvetica",8))
         for r in range(8):
             self.canvas.create_text(4, r*SQUARE+8, text=str(8-r), anchor='w', font=("Helvetica",8))
+        
+        if self.last_move_squares:
+            (r1, c1), (r2, c2) = self.last_move_squares
+            for (rr, cc) in [(r1, c1), (r2, c2)]:
+                x1 = cc*SQUARE
+                y1 = rr*SQUARE
+                self.canvas.create_rectangle(
+                    x1, y1, x1+SQUARE, y1+SQUARE,
+                    outline="#FFD700",
+                    width=4
+                )
 
     def _tick(self):
         self.update_ui()
@@ -186,6 +198,7 @@ class ChessGUI:
             dt = now - (self.state.move_start_time or now)
             alg = f"{self.idx_to_alg(self.selected[0],self.selected[1])}{self.idx_to_alg(r,c)}"
             self.state.apply_move(move, promote_to=promote_choice)
+            self.last_move_squares = move
             # ----- AJOUTS IMPORTANTS-----
             self.history.push(move)
             self.positions.append([row[:] for row in self.state.board])
@@ -240,6 +253,7 @@ class ChessGUI:
         if not messagebox.askyesno("Nouveau", "Commencer une nouvelle partie ?"):
             return
         self.state = GameState(vs_ai=self.vs_ai, ai_level=self.ai_level)
+        self.last_move_squares = None
         self.selected = None
         self.legal_targets = []
         self.state.start_time = time.time()
@@ -312,6 +326,7 @@ class ChessGUI:
 
         self.selected = None
         self.legal_targets = []
+        self.last_move_squares = None
         self.draw_board()
         self.update_ui()
         # ----------------------------
@@ -354,6 +369,7 @@ class ChessGUI:
             promote = 'q' if piece.islower() else 'Q'
 
         self.state.apply_move(move, promote_to=promote)
+        self.last_move_squares = move
 
         # ----- AJOUTS IMPORTANTS-----
         self.history.push(move)
