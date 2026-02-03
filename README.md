@@ -136,7 +136,7 @@ Pile_LIFO.pop()
 </ol>
 
 <pre><code class="language-bash">
-git clone https://github.com/&lt;ton-utilisateur&gt;/chess.bot.git
+git clone https://github.com/c0raw/chess.bot.git
 cd chess.bot
 </code></pre>
 
